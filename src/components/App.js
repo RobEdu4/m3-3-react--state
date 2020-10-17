@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import styled from "styled-components";
 import Header from "./Header";
 import Button from "./Button";
@@ -7,28 +7,81 @@ import DeadLetters from "./DeadLetters";
 import TheWord from "./TheWord";
 import Keyboard from "./Keyboard";
 import GameOverModal from "./GameOverModal";
+import words from "../data/words.json";
 
 import { colors, contentWidth } from "./GlobalStyles";
 
+const wordArray = words;
+
+const initialGameState = {
+  started: false,
+  over: false,
+  win: false,
+  paused: false,
+};
+
 const App = () => {
+  const [game, setGame] = useState(initialGameState);
+  const [word, setWord] = useState({ str: "", revealed: [] });
+  const [wrongGuesses, setWrongGuesses] = useState([]);
+  const [usedLetters, setUsedLetters] = useState([]);
+
+  const handleStart = () => {
+    if (word.str.length === 0) {
+      getNewWord(wordArray);
+      setGame({
+        ...game,
+        started: !game.started,
+      });
+    }
+    // else {
+    //   setGame({
+    //     started: true,
+    //   });
+    // }
+  };
+
+  const getNewWord = (words) => {
+    const randomWord = words[Math.floor(Math.random() * words.length)];
+    setWord({
+      str: randomWord,
+      revealed: randomWord.split("").map(() => {
+        return "";
+      }),
+    });
+  };
+
+  const handleStartButton = () => {
+    if (game.started === true && game.paused === false) {
+      game.paused = true;
+      return "PAUSE";
+    } else if (game.started === true && game.paused === true) {
+      game.paused = false;
+      return "CONTINUE";
+    }
+    return "START";
+  };
+
   return (
     <Wrapper>
       {/* <GameOverModal /> */}
       <Header />
       <Nav>
-        <Button>btn 1</Button>
-        <Button>btn 2</Button>
+        <Button onClickFunc={handleStart}>{handleStartButton()}</Button>
+        <Button> btn 2</Button>
       </Nav>
-      <>
-        <Container>
-          <Deadman />
-          <RightColumn>
-            <DeadLetters />
-            <TheWord />
-          </RightColumn>
-        </Container>
-        <Keyboard />
-      </>
+      {game.started && (
+        <>
+          <Container>
+            <Deadman />
+            <RightColumn>
+              <DeadLetters wrongGuesses={wrongGuesses} />
+              <TheWord word={word} />
+            </RightColumn>
+          </Container>
+          <Keyboard usedLetters={usedLetters} />
+        </>
+      )}
     </Wrapper>
   );
 };
